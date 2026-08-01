@@ -1,0 +1,144 @@
+"""
+=========================================================
+GlucoAnalytics v2.0
+
+Módulo:
+    loader.py
+
+Responsabilidad:
+    Cargar y validar un archivo Excel.
+
+Autor:
+    Diego Vasco
+
+Versión:
+    1.0.0
+=========================================================
+"""
+
+from importlib.resources import path
+from os import path
+from pathlib import Path
+import logging
+
+import pandas as pd
+
+from modules.dataset import Dataset
+from modules.exceptions import (
+    InvalidFileError,
+    InvalidExcelFormatError,
+    MissingSheetError,
+)
+
+logger = logging.getLogger(__name__)
+
+
+class Loader:
+    """
+    Responsable de cargar un archivo Excel.
+    """
+
+    def __init__(self) -> None:
+        logger.info("Loader inicializado")
+
+    def load(self, file_path: str) -> Dataset:
+        """
+        Punto de entrada principal.
+        """
+
+        path = Path(file_path)
+        ##############
+        logger.info("Iniicio de carga del archivo...")
+        ##############
+        self._check_file(path)
+        self._validate_sheet(path)
+        df = self._read_excel(path)
+        ##############
+        logger.info("Columnas detectadas: %s", list(df.columns))
+        ##############
+
+        raise NotImplementedError(
+            "Siguiente paso: validar columnas."
+        )
+
+    ############################################################
+
+    def _check_file(self, path: Path) -> None:
+       """
+       Comprueba que el archivo existe y que tiene
+       una extensión compatible.
+       """
+
+       logger.info("Comprobando archivo: %s", path)
+
+       if not path.exists():
+          raise InvalidFileError(
+              f"El archivo '{path}' no existe."
+        )
+
+       if not path.is_file():
+          raise InvalidFileError(
+              f"'{path}' no es un archivo."
+        )
+
+       if path.suffix.lower() != ".xlsx":
+           raise InvalidExcelFormatError(
+              f"Formato no soportado: '{path.suffix}'. "
+              "Actualmente solo se admiten archivos .xlsx."
+        )
+
+       logger.info("Archivo validado correctamente.")
+
+    ############################################################
+
+    def _validate_sheet(self, path: Path) -> None:
+        """
+        Comprueba que exista una hoja con el mismo nombre
+        que el archivo (sin la extensión).
+        """
+
+        logger.info("Validando hoja del Excel...")
+
+        try:
+            excel = pd.ExcelFile(path, engine="openpyxl")
+
+        except Exception as e:
+            raise InvalidExcelFormatError(
+                f"No se pudo abrir el archivo '{path.name}'."
+            ) from e
+
+        expected_sheet = path.stem
+
+        if expected_sheet not in excel.sheet_names:
+            raise MissingSheetError(
+                f"No existe la hoja '{expected_sheet}'. "
+                f"Hojas disponibles: {excel.sheet_names}"
+            )
+
+        logger.info(f"Hoja '{expected_sheet}' validada correctamente.")
+
+   ############################################################
+    def _read_excel(self, path: Path) -> pd.DataFrame:
+        """
+        Lee el archivo Excel y devuelve un DataFrame.
+        """
+
+        logger.info("Leyendo archivo Excel...")
+
+        try:
+            df = pd.read_excel(
+                path,
+                sheet_name=path.stem,
+                engine="openpyxl"
+            )
+
+            logger.info("Excel leído correctamente")
+
+            return df
+
+        except Exception as e:
+            raise InvalidExcelFormatError(
+                f"No se pudo leer el archivo '{path.name}'."
+            ) from e
+        
+############################################################
