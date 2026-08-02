@@ -43,3 +43,7 @@ class DuplicateRecordError(GlucoAnalyticsError):
 class InvalidDataError(GlucoAnalyticsError):
     """Los datos contienen valores no válidos."""
     pass
+
+class InvalidColumnsError(GlucoAnalyticsError):
+    """Las columnas del Excel no son válidas."""
+    pass

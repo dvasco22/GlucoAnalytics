@@ -48,7 +48,7 @@ TIME_FORMAT = "%H:%M"
 # Columnas del Excel
 # -------------------------------------------------------
 
-EXPECTED_COLUMNS = (
+EXPECTED_COLUMNS = {
     "Fecha",
     "Hora",
     "Ingesta",
@@ -56,7 +56,7 @@ EXPECTED_COLUMNS = (
     "Glucosa",
     "Ejercicio",
     "Insulina",
-)
+}
 
 # -------------------------------------------------------
 # Valores permitidos
@@ -85,6 +85,11 @@ VALID_BOOLEAN = (
 
 VALID_EXTENSIONS = (
     ".xlsx",
+)
+
+SUPPORTED_EXTENSIONS = (
+    ".xlsx",
+    ".csv",
 )
 
 # -------------------------------------------------------

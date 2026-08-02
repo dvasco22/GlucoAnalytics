@@ -15,7 +15,7 @@ Versión:
     1.0.0
 =========================================================
 """
-
+from modules.exceptions import InvalidColumnsError
 from importlib.resources import path
 from os import path
 from pathlib import Path
@@ -23,6 +23,7 @@ import logging
 
 import pandas as pd
 
+from modules.constants import EXPECTED_COLUMNS
 from modules.dataset import Dataset
 from modules.exceptions import (
     InvalidFileError,
@@ -53,15 +54,16 @@ class Loader:
         self._check_file(path)
         self._validate_sheet(path)
         df = self._read_excel(path)
-        ##############
-        logger.info("Columnas detectadas: %s", list(df.columns))
-        ##############
+
+        df = self._read_excel(path)
+
+        self._validate_columns(df)
 
         raise NotImplementedError(
-            "Siguiente paso: validar columnas."
+            "Siguiente paso: limpiar DataFrame."
         )
 
-    ############################################################
+         ############################################################
 
     def _check_file(self, path: Path) -> None:
        """
@@ -141,4 +143,36 @@ class Loader:
                 f"No se pudo leer el archivo '{path.name}'."
             ) from e
         
-############################################################
+    ############################################################
+
+    def _validate_columns(self, df: pd.DataFrame) -> None:
+        """
+        Valida que el DataFrame contenga todas las columnas obligatorias.
+        """
+
+        logger.info("Validando columnas...")
+
+        found_columns = set(df.columns)
+
+        missing_columns = EXPECTED_COLUMNS - found_columns
+        extra_columns = found_columns - EXPECTED_COLUMNS
+
+
+        errors = []
+
+        if missing_columns:
+           errors.append(
+               f"Faltan columnas: {sorted(missing_columns)}"
+        )
+
+        if extra_columns:
+             logger.warning(
+             "Columnas desconocidas: %s",
+             sorted(extra_columns)
+        )
+
+        if errors:
+           raise InvalidColumnsError("\n".join(errors))
+
+        logger.info("Columnas validadas correctamente.")
+
