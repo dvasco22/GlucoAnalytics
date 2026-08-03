@@ -12,10 +12,12 @@ __pycache__/
 
 # Archivos del sistema
 .DS_Store
-Thumbs.db
+Thumbs.dbgit rm --cached data/~$2026.xlsx
 
 # Salidas generadas
 output/
 
 # Datos temporales
 *.log
+
+~$*.xlsx

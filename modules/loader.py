@@ -38,7 +38,6 @@ class Loader:
     """
     Responsable de cargar un archivo Excel.
     """
-
     def __init__(self) -> None:
         logger.info("Loader inicializado")
 
@@ -48,22 +47,21 @@ class Loader:
         """
 
         path = Path(file_path)
-        ##############
+        
         logger.info("Iniicio de carga del archivo...")
-        ##############
+        
         self._check_file(path)
         self._validate_sheet(path)
-        df = self._read_excel(path)
-
-        df = self._read_excel(path)
-
+        df = self._read_excel(path) 
         self._validate_columns(df)
+        df = self._clean_dataframe(df)
+
+        print(df.head())
 
         raise NotImplementedError(
-            "Siguiente paso: limpiar DataFrame."
+            "Siguiente paso: reemplazar valores vacíos"
         )
 
-         ############################################################
 
     def _check_file(self, path: Path) -> None:
        """
@@ -91,8 +89,6 @@ class Loader:
 
        logger.info("Archivo validado correctamente.")
 
-    ############################################################
-
     def _validate_sheet(self, path: Path) -> None:
         """
         Comprueba que exista una hoja con el mismo nombre
@@ -119,7 +115,6 @@ class Loader:
 
         logger.info(f"Hoja '{expected_sheet}' validada correctamente.")
 
-   ############################################################
     def _read_excel(self, path: Path) -> pd.DataFrame:
         """
         Lee el archivo Excel y devuelve un DataFrame.
@@ -142,8 +137,6 @@ class Loader:
             raise InvalidExcelFormatError(
                 f"No se pudo leer el archivo '{path.name}'."
             ) from e
-        
-    ############################################################
 
     def _validate_columns(self, df: pd.DataFrame) -> None:
         """
@@ -175,4 +168,51 @@ class Loader:
            raise InvalidColumnsError("\n".join(errors))
 
         logger.info("Columnas validadas correctamente.")
+
+    def _trim_strings(self, df: pd.DataFrame) -> pd.DataFrame:
+       """
+       Elimina espacios al principio y al final de todas las cadenas
+       del DataFrame.
+       """
+
+       logger.info("Eliminando espacios en blanco...")
+
+       df = df.copy()
+
+       object_columns = df.select_dtypes(include="object").columns
+
+       for column in object_columns:
+           df[column] = df[column].str.strip()
+
+       return df
+
+    def _clean_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
+
+       logger.info("Limpiando DataFrame...")
+       
+       df = self._trim_strings(df)
+       df = self._replace_empty_values(df)
+
+       return df
+
+    def _replace_empty_values(self, df: pd.DataFrame) -> pd.DataFrame:
+            """
+            Reemplaza cadenas vacías o formadas únicamente por espacios
+            por valores nulos (pd.NA).
+            """
+
+            logger.info("Reemplazando valores vacíos...")
+
+            df = df.copy()
+
+            object_columns = df.select_dtypes(include="object").columns
+
+            for column in object_columns:
+
+                 df[column] = (
+                 df[column]
+                 .replace(r"^\s*$", pd.NA, regex=True)
+               )
+
+            return df
 
